@@ -8,7 +8,7 @@
         <p class="trade-status">Estado: <span class="status-badge">{{ trade.status }}</span></p>
     </div>
 
-    <div class="chat-messages">
+    <div class="chat-messages" id="chat-messages">
         {% if messages %}
         {% for msg in messages %}
         <div class="message {% if msg.sender_id == current_user.id %}message-sent{% else %}message-received{% endif %}">
@@ -20,13 +20,15 @@
         </div>
         {% endfor %}
         {% else %}
-        <p class="no-messages">No hay mensajes aún. ¡Inicia la conversación!</p>
+        <p class="no-messages" id="no-messages">No hay mensajes aún. ¡Inicia la conversación!</p>
         {% endif %}
     </div>
 
     <div class="chat-input-area">
-        <form action="{{ url_for('main.send_message', id=trade.id) }}" method="post" class="message-form">
-            <textarea name="content" placeholder="Escribe tu mensaje..." required rows="3"></textarea>
+        <form id="message-form" action="{{ url_for('main.send_message', id=trade.id) }}" method="post"
+            class="message-form">
+            <textarea name="content" id="message-content" placeholder="Escribe tu mensaje..." required
+                rows="3"></textarea>
             <button type="submit" class="btn-primary">Enviar</button>
         </form>
     </div>
@@ -34,18 +36,82 @@
     <div class="chat-actions">
         <form action="{{ url_for('main.keep_conversation', id=trade.id) }}" method="post" style="display: inline;">
             <button type="submit" class="btn-secondary">💾 Mantener Conversación</button>
-        </form>
+            <script>
+                const tradeId = {{ trade.id }};
+                const chatContainer = document.getElementById('chat-messages');
+                const messageForm = document.getElementById('message-form');
+                const messageInput = document.getElementById('message-content');
+                let lastMessageCount = {{ messages| length }};
 
-        {% if trade.status == 'pending' and current_user.id == trade.receiver_id %}
-        <form action="{{ url_for('main.accept_from_chat', id=trade.id) }}" method="post" style="display: inline;">
-            <button type="submit" class="btn-primary">✓ Aceptar Trueque</button>
-        </form>
-        {% elif trade.status == 'accepted' %}
-        <p style="color: var(--primary-green); font-weight: 600;">✓ Trueque aceptado. Confirmen ambos en "Mis Trueques".
-        </p>
-        {% endif %}
+                // Scroll to bottom on load
+                chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        <a href="{{ url_for('main.my_trades') }}" class="btn-secondary">← Volver a Mis Trueques</a>
-    </div>
-</div>
-{% endblock %}
+                function scrollToBottom() {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+
+                async function fetchMessages() {
+                    try {
+                        const response = await fetch(`/api/trade/${tradeId}/messages`);
+                        if (!response.ok) return;
+
+                        const messages = await response.json();
+
+                        // Only update if there are new messages
+                        if (messages.length > lastMessageCount) {
+                            renderMessages(messages);
+                            lastMessageCount = messages.length;
+                            scrollToBottom();
+                        }
+                    } catch (error) {
+                        console.error('Error fetching messages:', error);
+                    }
+                }
+
+                function renderMessages(messages) {
+                    if (messages.length === 0) return;
+
+                    const noMessages = document.getElementById('no-messages');
+                    if (noMessages) noMessages.remove();
+
+                    chatContainer.innerHTML = messages.map(msg => `
+            <div class="message ${msg.is_mine ? 'message-sent' : 'message-received'}">
+                <div class="message-header">
+                    <strong>${msg.sender_name}</strong>
+                    <span class="message-time">${msg.timestamp}</span>
+                </div>
+                <div class="message-content">${msg.content}</div>
+            </div>
+        `).join('');
+                }
+
+                messageForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const content = messageInput.value.trim();
+                    if (!content) return;
+
+                    try {
+                        const response = await fetch(`/api/trade/${tradeId}/send`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ content: content })
+                        });
+
+                        if (response.ok) {
+                            messageInput.value = '';
+                            fetchMessages(); // Fetch immediately to show own message
+                        } else {
+                            alert('Error al enviar el mensaje');
+                        }
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        alert('Error de conexión');
+                    }
+                });
+
+                // Poll every 3 seconds
+                setInterval(fetchMessages, 3000);
+            </script>
+            {% endblock %}

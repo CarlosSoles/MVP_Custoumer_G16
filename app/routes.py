@@ -437,29 +437,22 @@ def confirm_trade(id):
     db.session.commit()
     
     if trade.proposer_confirmed_at and trade.receiver_confirmed_at:
-        time_diff = abs((trade.proposer_confirmed_at - trade.receiver_confirmed_at).total_seconds())
-        if time_diff <= 300: # 5 minutes
-            trade.status = 'completed'
-            trade.completed_at = now
-            trade.product.status = 'traded'
-            
-            trade.proposer.coins += 35
-            trade.receiver.coins += 35
-            
-            notif1 = Notification(user_id=trade.proposer_id, message=f"Trueque realizado con éxito! Has ganado 35 coins.")
-            notif2 = Notification(user_id=trade.receiver_id, message=f"Trueque realizado con éxito! Has ganado 35 coins.")
-            db.session.add(notif1)
-            db.session.add(notif2)
-            
-            db.session.commit()
-            flash('¡Trueque completado exitosamente! +35 coins.')
-        else:
-            trade.proposer_confirmed_at = None
-            trade.receiver_confirmed_at = None
-            db.session.commit()
-            flash('El tiempo de confirmación expiró (5 min). Inténtenlo de nuevo.')
+        trade.status = 'completed'
+        trade.completed_at = now
+        trade.product.status = 'traded'
+        
+        trade.proposer.coins += 35
+        trade.receiver.coins += 35
+        
+        notif1 = Notification(user_id=trade.proposer_id, message=f"Trueque realizado con éxito! Has ganado 35 coins.")
+        notif2 = Notification(user_id=trade.receiver_id, message=f"Trueque realizado con éxito! Has ganado 35 coins.")
+        db.session.add(notif1)
+        db.session.add(notif2)
+        
+        db.session.commit()
+        flash('¡Trueque completado exitosamente! +35 coins.')
     else:
-        flash('Confirmación registrada. Esperando al otro usuario.')
+        flash('Confirmación registrada. Esperando al otro usuario para finalizar.')
         
     return redirect(url_for('main.my_trades'))
 
@@ -576,3 +569,63 @@ def accept_from_chat(id):
     db.session.commit()
     flash('Trueque aceptado. Ahora ambos deben confirmar.')
     return redirect(url_for('main.my_trades'))
+
+@bp.route('/api/trade/<int:id>/messages')
+@login_required
+def get_messages(id):
+    trade = Trade.query.get_or_404(id)
+    
+    if current_user.id not in [trade.proposer_id, trade.receiver_id]:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    messages = Message.query.filter_by(trade_id=trade.id).order_by(Message.timestamp.asc()).all()
+    
+    # Mark as read
+    for msg in messages:
+        if msg.sender_id != current_user.id and not msg.read:
+            msg.read = True
+    db.session.commit()
+    
+    return jsonify([{
+        'id': msg.id,
+        'sender_id': msg.sender_id,
+        'sender_name': msg.sender.name,
+        'content': msg.content,
+        'timestamp': msg.timestamp.strftime('%d/%m %H:%M'),
+        'is_mine': msg.sender_id == current_user.id
+    } for msg in messages])
+
+@bp.route('/api/trade/<int:id>/send', methods=['POST'])
+@login_required
+def send_message_api(id):
+    trade = Trade.query.get_or_404(id)
+    
+    if current_user.id not in [trade.proposer_id, trade.receiver_id]:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    data = request.get_json()
+    content = data.get('content')
+    
+    if content and content.strip():
+        message = Message(
+            trade_id=trade.id,
+            sender_id=current_user.id,
+            content=content.strip()
+        )
+        db.session.add(message)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': {
+                'id': message.id,
+                'sender_id': message.sender_id,
+                'sender_name': message.sender.name,
+                'content': message.content,
+                'timestamp': message.timestamp.strftime('%d/%m %H:%M'),
+                'is_mine': True
+            }
+        })
+    
+    return jsonify({'error': 'Empty message'}), 400
+

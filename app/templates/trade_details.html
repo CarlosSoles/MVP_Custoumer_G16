@@ -99,6 +99,20 @@
             <button type="submit" class="btn-action btn-cancel">Cancelar Solicitud</button>
         </form>
         {% endif %}
+        {% elif trade.status == 'accepted' %}
+        <form action="{{ url_for('main.confirm_trade', id=trade.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-action btn-accept">Finalizar Trueque</button>
+        </form>
+        <form action="{{ url_for('main.cancel_trade', id=trade.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-action btn-cancel">Cancelar Trueque</button>
+        </form>
+
+        {% if (current_user.id == trade.proposer_id and trade.proposer_confirmed_at) or (current_user.id ==
+        trade.receiver_id and trade.receiver_confirmed_at) %}
+        <p style="width: 100%; text-align: center; margin-top: 1rem; color: #059669;">
+            Has confirmado. Esperando al otro usuario...
+        </p>
+        {% endif %}
         {% endif %}
 
         <a href="{{ url_for('main.my_trades') }}" class="btn-back">Volver a Mis Trueques</a>
