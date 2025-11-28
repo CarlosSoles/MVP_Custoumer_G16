@@ -5,3 +5,5 @@ Flask-Migrate
 Pillow
 python-dotenv
 email_validator
+gunicorn
+psycopg2-binary
