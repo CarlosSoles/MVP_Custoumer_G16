@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="trade-container">
+    <h2>Proponer Trueque</h2>
+    <div class="product-preview">
+        <h3>{{ product.title }}</h3>
+        <p>Propietario: {{ product.owner.name }}</p>
+        <p>{{ product.description }}</p>
+    </div>
+    <p>¿Estás seguro que deseas proponer un trueque por este objeto?</p>
+    <form action="{{ url_for('main.propose_trade', id=product.id) }}" method="post">
+        <button type="submit" class="btn">Confirmar Propuesta</button>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

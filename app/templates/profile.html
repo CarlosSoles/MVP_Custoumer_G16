@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>Perfil de Usuario</h2>
+    <div class="profile-info">
+        {% if user.photo %}
+        <img src="{{ url_for('static', filename='uploads/' + user.photo) }}" alt="Foto de perfil"
+            style="max-width: 200px;">
+        {% endif %}
+        <p><strong>Nombre:</strong> {{ user.name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>DNI:</strong> {{ user.dni }}</p>
+        <p><strong>Departamento:</strong> {{ user.department }}</p>
+        <p><strong>Ciudad:</strong> {{ user.city }}</p>
+        <p><strong>Coins:</strong> {{ user.coins }}</p>
+        <p><strong>Descripción:</strong> {{ user.bio }}</p>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('main.edit_profile') }}" class="btn">Editar Perfil</a>
+    </div>
+</div>
+{% endblock %}

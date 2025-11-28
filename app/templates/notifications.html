@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="notifications-header">
+        <h2>Notificaciones</h2>
+        {% if notifications %}
+        <form action="{{ url_for('main.mark_all_read') }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-primary">Marcar como leídas</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if notifications %}
+    <ul class="notification-list">
+        {% for notif in notifications %}
+        <li class="notification-item {% if not notif.read %}unread{% endif %}">
+            <p>{{ notif.message }}</p>
+            <small>{{ notif.timestamp.strftime('%d/%m/%Y %H:%M') }}</small>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="no-notifications">No tienes notificaciones.</p>
+    {% endif %}
+</div>
+{% endblock %}

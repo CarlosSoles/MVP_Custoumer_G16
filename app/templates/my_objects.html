@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="my-objects-container">
+    <h2>Mis Objetos</h2>
+
+    <!-- Tabs -->
+    <div class="trade-tabs">
+        <div class="tab active" data-tab="list">Lista de Objetos</div>
+        <div class="tab" data-tab="publish">Publicar Objeto</div>
+    </div>
+
+    <!-- List of Objects Tab -->
+    <div class="tab-content" id="list-tab">
+        <div class="objects-list">
+            {% if objects %}
+            {% for obj in objects %}
+            <div class="object-card">
+                {% set photos = obj.photos.split(',') %}
+                <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ obj.title }}"
+                    style="max-width: 150px;">
+                <h3>{{ obj.title }}</h3>
+                <p>{{ obj.description }}</p>
+                <p><strong>Categoría:</strong> {{ obj.category }}</p>
+                <p><strong>Estado:</strong> {{ obj.condition }}</p>
+                <p><strong>Status:</strong> {{ obj.status }}</p>
+                <div class="object-actions">
+                    {% if obj.status == 'active' %}
+                    <form action="{{ url_for('main.withdraw_object', id=obj.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" class="btn btn-warning">Retirar Publicación</button>
+                    </form>
+                    {% endif %}
+                    <form action="{{ url_for('main.delete_object', id=obj.id) }}" method="post" style="display:inline;"
+                        onsubmit="return confirm('¿Estás seguro de eliminar este objeto?');">
+                        <button type="submit" class="btn btn-danger">Eliminar Objeto</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p>No tienes objetos publicados.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Publish Object Tab -->
+    <div class="tab-content" id="publish-tab" style="display: none;">
+        <h3>Publicar Objeto</h3>
+        <p>Costo de publicación: 20 coins</p>
+        <p>Tus coins actuales: {{ current_user.coins }}</p>
+
+        {% if current_user.coins < 20 %} <div class="alert alert-danger">No tienes suficientes coins para publicar.
+    </div>
+    {% else %}
+    <form action="{{ url_for('main.publish_object') }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="photos">Fotos (Mínimo 1):</label>
+            <input type="file" name="photos" id="photos" required multiple accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="title">Título:</label>
+            <input type="text" name="title" id="title" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Descripción:</label>
+            <textarea name="description" id="description" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="category">Categoría:</label>
+            <select name="category" id="category" required>
+                <option value="">Seleccione</option>
+                <option value="Ropa">Ropa</option>
+                <option value="Electro">Electro</option>
+                <option value="Decoración">Decoración</option>
+                <option value="Libros">Libros</option>
+                <option value="Juguetes">Juguetes</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="condition">Estado:</label>
+            <select name="condition" id="condition" required>
+                <option value="">Seleccione</option>
+                <option value="Nuevo">Nuevo</option>
+                <option value="Semi-nuevo">Semi-nuevo</option>
+                <option value="Usado">Usado</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-primary">Publicar</button>
+    </form>
+    {% endif %}
+</div>
+</div>
+
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+
+            this.classList.add('active');
+            const tabName = this.getAttribute('data-tab');
+            document.getElementById(tabName + '-tab').style.display = 'block';
+        });
+    });
+</script>
+{% endblock %}

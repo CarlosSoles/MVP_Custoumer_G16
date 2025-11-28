@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <h1>Encuentra tu próximo tesoro</h1>
+    <p>Explora, intercambia y subasta objetos únicos en nuestra comunidad.</p>
+
+    <div class="filters">
+        <a href="{{ url_for('main.index', category='all') }}"
+            class="filter-tag {% if selected_category == 'all' %}active{% endif %}">Ver todo</a>
+        <a href="{{ url_for('main.index', category='Ropa') }}"
+            class="filter-tag {% if selected_category == 'Ropa' %}active{% endif %}">Ropa</a>
+        <a href="{{ url_for('main.index', category='Electro') }}"
+            class="filter-tag {% if selected_category == 'Electro' %}active{% endif %}">Electro</a>
+        <a href="{{ url_for('main.index', category='Decoración') }}"
+            class="filter-tag {% if selected_category == 'Decoración' %}active{% endif %}">Decoración</a>
+        <a href="{{ url_for('main.index', category='Libros') }}"
+            class="filter-tag {% if selected_category == 'Libros' %}active{% endif %}">Libros</a>
+        <a href="{{ url_for('main.index', category='Juguetes') }}"
+            class="filter-tag {% if selected_category == 'Juguetes' %}active{% endif %}">Juguetes</a>
+    </div>
+</div>
+
+<div class="product-feed">
+    {% if products %}
+    {% for product in products %}
+    <div class="product-card">
+        {% set photos = product.photos.split(',') %}
+        <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ product.title }}"
+            class="card-image">
+        <div class="card-content">
+            <span class="card-tag">DISPONIBLE PARA TRUEQUE</span>
+            <h3 class="card-title">{{ product.title }}</h3>
+            <p class="card-user">De {{ product.owner.name }}</p>
+            {% if current_user.is_authenticated %}
+            <form action="{{ url_for('main.propose_trade', id=product.id) }}" method="get">
+                <button type="submit" class="btn-full">Proponer Trueque</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('main.login') }}" class="btn-full">Únete a CambialoPe para ver más productos</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
+        <p>No hay productos disponibles en esta categoría.</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.publish_object') }}" class="btn-primary">¡Sé el primero en publicar!</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

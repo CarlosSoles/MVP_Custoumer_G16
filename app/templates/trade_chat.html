@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>Chat: {{ trade.product.title }}</h2>
+        <p>Conversando con <strong>{{ other_user.name }}</strong></p>
+        <p class="trade-status">Estado: <span class="status-badge">{{ trade.status }}</span></p>
+    </div>
+
+    <div class="chat-messages">
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="message {% if msg.sender_id == current_user.id %}message-sent{% else %}message-received{% endif %}">
+            <div class="message-header">
+                <strong>{{ msg.sender.name }}</strong>
+                <span class="message-time">{{ msg.timestamp.strftime('%d/%m %H:%M') }}</span>
+            </div>
+            <div class="message-content">{{ msg.content }}</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="no-messages">No hay mensajes aún. ¡Inicia la conversación!</p>
+        {% endif %}
+    </div>
+
+    <div class="chat-input-area">
+        <form action="{{ url_for('main.send_message', id=trade.id) }}" method="post" class="message-form">
+            <textarea name="content" placeholder="Escribe tu mensaje..." required rows="3"></textarea>
+            <button type="submit" class="btn-primary">Enviar</button>
+        </form>
+    </div>
+
+    <div class="chat-actions">
+        <form action="{{ url_for('main.keep_conversation', id=trade.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-secondary">💾 Mantener Conversación</button>
+        </form>
+
+        {% if trade.status == 'pending' and current_user.id == trade.receiver_id %}
+        <form action="{{ url_for('main.accept_from_chat', id=trade.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-primary">✓ Aceptar Trueque</button>
+        </form>
+        {% elif trade.status == 'accepted' %}
+        <p style="color: var(--primary-green); font-weight: 600;">✓ Trueque aceptado. Confirmen ambos en "Mis Trueques".
+        </p>
+        {% endif %}
+
+        <a href="{{ url_for('main.my_trades') }}" class="btn-secondary">← Volver a Mis Trueques</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Trueques</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <a href="{{ url_for('main.index') }}">
+                <span style="color: var(--primary-green); font-size: 1.5rem;">■</span> CambialoPe
+            </a>
+        </div>
+        <nav>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.my_objects') }}">Mis Objetos</a>
+            <a href="{{ url_for('main.my_trades') }}">Mis Trueques</a>
+            <a href="{{ url_for('main.notifications') }}" class="notification-link">
+                Notificaciones
+                {% set unread_count = current_user.notifications.filter_by(read=False).count() %}
+                {% if unread_count > 0 %}
+                <span class="notification-badge">{{ unread_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('main.profile') }}">Perfil</a>
+            <span class="coins">{{ current_user.coins }} 🪙</span>
+            <a href="{{ url_for('main.logout') }}" class="btn-secondary">Salir</a>
+            {% else %}
+            <a href="{{ url_for('main.login') }}" class="btn-primary">Iniciar Sesión</a>
+            <a href="{{ url_for('main.register') }}" class="btn-secondary">Registro</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes" style="max-width: 1200px; margin: 1rem auto; list-style: none; padding: 0;">
+            {% for message in messages %}
+            <li class="alert">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+
+</html>

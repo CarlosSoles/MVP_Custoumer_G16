@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="my-trades-container">
+    <div class="trades-header">
+        <h1>Mis Trueques</h1>
+        <p class="subtitle">Administra y revisa el estado de todos tus intercambios.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="trade-tabs">
+        <div class="tab active" data-tab="received">Solicitudes Recibidas</div>
+        <div class="tab" data-tab="proposed">Solicitudes Enviadas</div>
+        <div class="tab" data-tab="chats">Chats</div>
+        <div class="tab" data-tab="completed">Trueques Realizados</div>
+        <div class="tab" data-tab="cancelled">Trueques Cancelados</div>
+    </div>
+
+    <!-- Received Trades Tab -->
+    <div class="tab-content" id="received-tab">
+        {% if received_trades %}
+        {% for trade in received_trades %}
+        {% if trade.status in ['pending', 'accepted'] %}
+        <div class="trade-item">
+            <div class="trade-images">
+                {% set photos = trade.product.photos.split(',') %}
+                <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ trade.product.title }}">
+            </div>
+            <div class="trade-info">
+                <h3>{{ trade.product.title }}</h3>
+                <p class="trade-partner">Intercambio con <strong>{{ trade.proposer.name }}</strong></p>
+            </div>
+            <div class="trade-status">
+                {% if trade.status == 'pending' %}
+                <span class="status-badge status-pending">Pendiente</span>
+                {% elif trade.status == 'accepted' %}
+                <span class="status-badge status-accepted">Aceptado</span>
+                {% endif %}
+            </div>
+            <div class="trade-actions">
+                <a href="{{ url_for('main.trade_chat', id=trade.id) }}" class="btn-chat">Abrir Chat</a>
+                <a href="#" class="btn-details">Ver Detalles</a>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <p class="no-trades">No tienes solicitudes recibidas.</p>
+        {% endif %}
+    </div>
+
+    <!-- Proposed Trades Tab -->
+    <div class="tab-content" id="proposed-tab" style="display: none;">
+        {% if proposed_trades %}
+        {% for trade in proposed_trades %}
+        {% if trade.status in ['pending', 'accepted'] %}
+        <div class="trade-item">
+            <div class="trade-images">
+                {% set photos = trade.product.photos.split(',') %}
+                <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ trade.product.title }}">
+            </div>
+            <div class="trade-info">
+                <h3>{{ trade.product.title }}</h3>
+                <p class="trade-partner">Intercambio con <strong>{{ trade.receiver.name }}</strong></p>
+            </div>
+            <div class="trade-status">
+                {% if trade.status == 'pending' %}
+                <span class="status-badge status-pending">Pendiente</span>
+                {% elif trade.status == 'accepted' %}
+                <span class="status-badge status-accepted">Aceptado</span>
+                {% endif %}
+            </div>
+            <div class="trade-actions">
+                <a href="{{ url_for('main.trade_chat', id=trade.id) }}" class="btn-chat">Abrir Chat</a>
+                <a href="#" class="btn-details">Ver Detalles</a>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <p class="no-trades">No has realizado propuestas.</p>
+        {% endif %}
+    </div>
+
+    <!-- Active Chats Tab -->
+    <div class="tab-content" id="chats-tab" style="display: none;">
+        {% set active_chats = [] %}
+        {% for trade in received_trades + proposed_trades %}
+        {% if trade.chat_active and trade.status in ['pending', 'accepted'] %}
+        {% set _ = active_chats.append(trade) %}
+        {% endif %}
+        {% endfor %}
+
+        {% if active_chats %}
+        {% for trade in active_chats %}
+        <div class="trade-item">
+            <div class="trade-images">
+                {% set photos = trade.product.photos.split(',') %}
+                <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ trade.product.title }}">
+            </div>
+            <div class="trade-info">
+                <h3>{{ trade.product.title }}</h3>
+                <p class="trade-partner">
+                    Con <strong>
+                        {% if current_user.id == trade.proposer_id %}
+                        {{ trade.receiver.name }}
+                        {% else %}
+                        {{ trade.proposer.name }}
+                        {% endif %}
+                    </strong>
+                </p>
+            </div>
+            <div class="trade-status">
+                {% if trade.status == 'pending' %}
+                <span class="status-badge status-pending">Pendiente</span>
+                {% elif trade.status == 'accepted' %}
+                <span class="status-badge status-accepted">Aceptado</span>
+                {% endif %}
+            </div>
+            <div class="trade-actions">
+                <a href="{{ url_for('main.trade_chat', id=trade.id) }}" class="btn-chat">Continuar Chat</a>
+                <a href="#" class="btn-details">Ver Detalles</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="no-trades">No tienes chats activos.</p>
+        {% endif %}
+    </div>
+
+    <!-- Completed Trades Tab -->
+    <div class="tab-content" id="completed-tab" style="display: none;">
+        {% set completed_trades = [] %}
+        {% for trade in received_trades + proposed_trades %}
+        {% if trade.status == 'completed' %}
+        {% set _ = completed_trades.append(trade) %}
+        {% endif %}
+        {% endfor %}
+
+        {% if completed_trades %}
+        {% for trade in completed_trades %}
+        <div class="trade-item">
+            <div class="trade-images">
+                {% set photos = trade.product.photos.split(',') %}
+                <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ trade.product.title }}">
+            </div>
+            <div class="trade-info">
+                <h3>{{ trade.product.title }}</h3>
+                <p class="trade-partner">
+                    Con <strong>
+                        {% if current_user.id == trade.proposer_id %}
+                        {{ trade.receiver.name }}
+                        {% else %}
+                        {{ trade.proposer.name }}
+                        {% endif %}
+                    </strong>
+                </p>
+            </div>
+            <div class="trade-status">
+                <span class="status-badge status-completed">Finalizado</span>
+            </div>
+            <div class="trade-actions">
+                <a href="#" class="btn-details">Ver Detalles</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="no-trades">No tienes trueques completados.</p>
+        {% endif %}
+    </div>
+
+    <!-- Cancelled Trades Tab -->
+    <div class="tab-content" id="cancelled-tab" style="display: none;">
+        {% set cancelled_trades = [] %}
+        {% for trade in received_trades + proposed_trades %}
+        {% if trade.status == 'cancelled' %}
+        {% set _ = cancelled_trades.append(trade) %}
+        {% endif %}
+        {% endfor %}
+
+        {% if cancelled_trades %}
+        {% for trade in cancelled_trades %}
+        <div class="trade-item">
+            <div class="trade-images">
+                {% set photos = trade.product.photos.split(',') %}
+                <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ trade.product.title }}">
+            </div>
+            <div class="trade-info">
+                <h3>{{ trade.product.title }}</h3>
+                <p class="trade-partner">
+                    Con <strong>
+                        {% if current_user.id == trade.proposer_id %}
+                        {{ trade.receiver.name }}
+                        {% else %}
+                        {{ trade.proposer.name }}
+                        {% endif %}
+                    </strong>
+                </p>
+            </div>
+            <div class="trade-status">
+                <span class="status-badge status-rejected">Cancelado</span>
+            </div>
+            <div class="trade-actions">
+                <a href="#" class="btn-details">Ver Detalles</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="no-trades">No tienes trueques cancelados.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+
+            this.classList.add('active');
+            const tabName = this.getAttribute('data-tab');
+            document.getElementById(tabName + '-tab').style.display = 'block';
+        });
+    });
+</script>
+{% endblock %}
