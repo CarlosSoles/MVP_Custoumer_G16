@@ -2,6 +2,7 @@ services:
   - type: web
     name: cambialope
     env: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn run:app
     envVars:
@@ -18,3 +19,4 @@ databases:
   - name: cambialope-db
     databaseName: cambialope
     user: cambialope_user
+    plan: free
