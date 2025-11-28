@@ -40,7 +40,8 @@ class Product(db.Model):
     category = db.Column(db.String(64))
     condition = db.Column(db.String(64))
     photos = db.Column(db.String(500)) # Comma separated filenames
-    status = db.Column(db.String(20), default='active') # active, traded, deleted
+    status = db.Column(db.String(20), default='active') # active, traded, deleted, draft
+    is_draft = db.Column(db.Boolean, default=False) # True = registered (draft), False = published
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 class Trade(db.Model):
@@ -59,6 +60,15 @@ class Trade(db.Model):
     
     product = db.relationship('Product', backref='trades')
     messages = db.relationship('Message', backref='trade', lazy='dynamic')
+    offered_products = db.relationship('TradeOffer', backref='trade', lazy='dynamic')
+
+class TradeOffer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    trade_id = db.Column(db.Integer, db.ForeignKey('trade.id'))
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    
+    product = db.relationship('Product', backref='trade_offers')
+
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)

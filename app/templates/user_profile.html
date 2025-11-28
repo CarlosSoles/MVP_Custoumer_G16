@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="public-profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {% if user.photo %}
+                <img src="{{ url_for('static', filename='uploads/' + user.photo) }}" alt="{{ user.name }}">
+                {% else %}
+                <div class="avatar-placeholder">{{ user.name[0].upper() }}</div>
+                {% endif %}
+            </div>
+            <h1 class="profile-name">{{ user.name }}</h1>
+        </div>
+
+        <div class="profile-details">
+            <div class="detail-group">
+                <label>Email</label>
+                <p>{{ user.email }}</p>
+            </div>
+
+            <div class="detail-group">
+                <label>Ubicación</label>
+                <p>{{ user.city }}, {{ user.department }}</p>
+            </div>
+
+            <div class="detail-group">
+                <label>Descripción</label>
+                <p class="bio-text">{{ user.bio or 'Sin descripción disponible.' }}</p>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <button onclick="history.back()" class="btn-back">Volver</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

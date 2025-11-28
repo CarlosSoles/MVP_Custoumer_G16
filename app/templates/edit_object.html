@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="my-objects-container">
+    <h2>Editar Objeto</h2>
+    
+    <form action="{{ url_for('main.edit_object', id=product.id) }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="photos">Fotos (Opcional - deja vacío para mantener las actuales):</label>
+            <input type="file" name="photos" id="photos" multiple accept="image/*">
+            <p style="font-size: 0.9em; color: #666;">Fotos actuales: {{ product.photos.split(',') | length }}</p>
+        </div>
+        <div class="form-group">
+            <label for="title">Título:</label>
+            <input type="text" name="title" id="title" value="{{ product.title }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Descripción:</label>
+            <textarea name="description" id="description" required>{{ product.description }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="category">Categoría:</label>
+            <select name="category" id="category" required>
+                <option value="">Seleccione</option>
+                <option value="Ropa" {% if product.category == 'Ropa' %}selected{% endif %}>Ropa</option>
+                <option value="Electro" {% if product.category == 'Electro' %}selected{% endif %}>Electro</option>
+                <option value="Decoración" {% if product.category == 'Decoración' %}selected{% endif %}>Decoración</option>
+                <option value="Libros" {% if product.category == 'Libros' %}selected{% endif %}>Libros</option>
+                <option value="Juguetes" {% if product.category == 'Juguetes' %}selected{% endif %}>Juguetes</option>
+                <option value="Otro" {% if product.category == 'Otro' %}selected{% endif %}>Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="condition">Estado:</label>
+            <select name="condition" id="condition" required>
+                <option value="">Seleccione</option>
+                <option value="Nuevo" {% if product.condition == 'Nuevo' %}selected{% endif %}>Nuevo</option>
+                <option value="Semi-nuevo" {% if product.condition == 'Semi-nuevo' %}selected{% endif %}>Semi-nuevo</option>
+                <option value="Usado" {% if product.condition == 'Usado' %}selected{% endif %}>Usado</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-primary">Guardar Cambios</button>
+        <a href="{{ url_for('main.my_objects') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app
+from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.utils import secure_filename
 from app import db
@@ -100,6 +100,13 @@ def logout():
 def profile():
     return render_template('profile.html', user=current_user)
 
+@bp.route('/user_profile/<int:user_id>')
+@login_required
+def user_profile(user_id):
+    user = User.query.get_or_404(user_id)
+    return render_template('user_profile.html', user=user)
+
+
 @bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
@@ -181,11 +188,119 @@ def publish_object():
         
     return render_template('publish_object.html')
 
+@bp.route('/product/<int:id>')
+def product_detail(id):
+    product = Product.query.get_or_404(id)
+    return render_template('product_detail.html', product=product)
+
 @bp.route('/my_objects')
 @login_required
 def my_objects():
+
     objects = Product.query.filter_by(user_id=current_user.id).filter(Product.status != 'deleted').order_by(Product.created_at.desc()).all()
     return render_template('my_objects.html', objects=objects)
+
+@bp.route('/register_object', methods=['POST'])
+@login_required
+def register_object():
+    title = request.form.get('title')
+    description = request.form.get('description')
+    category = request.form.get('category')
+    condition = request.form.get('condition')
+    photos = request.files.getlist('photos')
+    
+    photo_filenames = []
+    for photo in photos:
+        if photo:
+            filename = secure_filename(photo.filename)
+            filename = f"{uuid.uuid4().hex}_{filename}"
+            photo.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+            photo_filenames.append(filename)
+    
+    product = Product(
+        title=title,
+        description=description,
+        category=category,
+        condition=condition,
+        photos=",".join(photo_filenames),
+        owner=current_user,
+        status='draft',
+        is_draft=True
+    )
+    
+    db.session.add(product)
+    db.session.commit()
+    
+    flash('Objeto registrado exitosamente. Puedes publicarlo cuando desees.')
+    return redirect(url_for('main.my_objects'))
+
+@bp.route('/edit_object/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_object(id):
+    product = Product.query.get_or_404(id)
+    if product.owner != current_user:
+        flash('No tienes permiso.')
+        return redirect(url_for('main.my_objects'))
+    
+    if not product.is_draft:
+        flash('Solo puedes editar objetos registrados (no publicados).')
+        return redirect(url_for('main.my_objects'))
+    
+    if request.method == 'POST':
+        product.title = request.form.get('title')
+        product.description = request.form.get('description')
+        product.category = request.form.get('category')
+        product.condition = request.form.get('condition')
+        
+        # Handle new photos if uploaded
+        photos = request.files.getlist('photos')
+        if photos and photos[0].filename:
+            photo_filenames = []
+            for photo in photos:
+                if photo:
+                    filename = secure_filename(photo.filename)
+                    filename = f"{uuid.uuid4().hex}_{filename}"
+                    photo.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+                    photo_filenames.append(filename)
+            product.photos = ",".join(photo_filenames)
+        
+        db.session.commit()
+        flash('Objeto actualizado exitosamente.')
+        return redirect(url_for('main.my_objects'))
+    
+    return render_template('edit_object.html', product=product)
+
+@bp.route('/publish_registered_object/<int:id>', methods=['POST'])
+@login_required
+def publish_registered_object(id):
+    product = Product.query.get_or_404(id)
+    if product.owner != current_user:
+        flash('No tienes permiso.')
+        return redirect(url_for('main.my_objects'))
+    
+    if not product.is_draft:
+        flash('Este objeto ya está publicado.')
+        return redirect(url_for('main.my_objects'))
+    
+    if current_user.coins < 20:
+        flash('No tienes suficientes coins para publicar.')
+        return redirect(url_for('main.my_objects'))
+    
+    product.is_draft = False
+    product.status = 'active'
+    current_user.coins -= 20
+    
+    # Create notification for publication
+    notif = Notification(
+        user_id=current_user.id,
+        message=f'Has publicado "{product.title}". Se descontaron 20 coins de tu cuenta.'
+    )
+    db.session.add(notif)
+    db.session.commit()
+    
+    flash('Objeto publicado exitosamente. Se han descontado 20 coins.')
+    return redirect(url_for('main.my_objects'))
+
 
 @bp.route('/withdraw_object/<int:id>', methods=['POST'])
 @login_required
@@ -237,6 +352,18 @@ def propose_trade(id):
             
         trade = Trade(proposer_id=current_user.id, receiver_id=product.owner.id, product_id=product.id)
         db.session.add(trade)
+        db.session.flush()  # Get trade.id before adding offers
+        
+        # Get selected offered products (optional)
+        offered_product_ids = request.form.getlist('offered_products')
+        if offered_product_ids:
+            from app.models import TradeOffer
+            for product_id in offered_product_ids:
+                # Verify product belongs to current user
+                offered_product = Product.query.get(int(product_id))
+                if offered_product and offered_product.owner == current_user:
+                    trade_offer = TradeOffer(trade_id=trade.id, product_id=int(product_id))
+                    db.session.add(trade_offer)
         
         notif = Notification(user_id=product.owner.id, message=f"Propuesta de trueque recibida de {current_user.name} por {product.title}")
         db.session.add(notif)
@@ -244,8 +371,11 @@ def propose_trade(id):
         db.session.commit()
         flash('Propuesta enviada.')
         return redirect(url_for('main.my_trades'))
-        
-    return render_template('propose_trade.html', product=product)
+    
+    # GET request: get user's registered objects to offer
+    my_objects = Product.query.filter_by(user_id=current_user.id).filter(Product.status != 'deleted').all()
+    return render_template('propose_trade.html', product=product, my_objects=my_objects)
+
 
 @bp.route('/my_trades')
 @login_required
@@ -370,6 +500,21 @@ def trade_chat(id):
     other_user = trade.proposer if current_user.id == trade.receiver_id else trade.receiver
     
     return render_template('trade_chat.html', trade=trade, messages=messages, other_user=other_user)
+
+@bp.route('/trade/<int:id>')
+@login_required
+def trade_details(id):
+    trade = Trade.query.get_or_404(id)
+    
+    # Verify user is part of this trade
+    if current_user.id not in [trade.proposer_id, trade.receiver_id]:
+        flash('No tienes permiso para ver este trueque.')
+        return redirect(url_for('main.my_trades'))
+        
+    other_user = trade.proposer if current_user.id == trade.receiver_id else trade.receiver
+    
+    return render_template('trade_details.html', trade=trade, other_user=other_user)
+
 
 @bp.route('/trade/<int:id>/send_message', methods=['POST'])
 @login_required

@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma de Trueques</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/objects.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/propose_trade.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_profile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/trade_details.css') }}">
 </head>
 
 <body>
@@ -27,7 +31,7 @@
                 {% endif %}
             </a>
             <a href="{{ url_for('main.profile') }}">Perfil</a>
-            <span class="coins">{{ current_user.coins }} 🪙</span>
+            <span class="coins">{{ current_user.coins }} 💰</span>
             <a href="{{ url_for('main.logout') }}" class="btn-secondary">Salir</a>
             {% else %}
             <a href="{{ url_for('main.login') }}" class="btn-primary">Iniciar Sesión</a>

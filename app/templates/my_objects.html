@@ -7,6 +7,7 @@
     <!-- Tabs -->
     <div class="trade-tabs">
         <div class="tab active" data-tab="list">Lista de Objetos</div>
+        <div class="tab" data-tab="register">Registrar Objetos</div>
         <div class="tab" data-tab="publish">Publicar Objeto</div>
     </div>
 
@@ -23,8 +24,27 @@
                 <p>{{ obj.description }}</p>
                 <p><strong>Categoría:</strong> {{ obj.category }}</p>
                 <p><strong>Estado:</strong> {{ obj.condition }}</p>
-                <p><strong>Status:</strong> {{ obj.status }}</p>
+                <p><strong>Status:</strong>
+                    {% if obj.is_draft %}
+                    <span style="color: orange;">Borrador (No publicado)</span>
+                    {% else %}
+                    {{ obj.status }}
+                    {% endif %}
+                </p>
                 <div class="object-actions">
+                    {% if obj.is_draft %}
+                    <!-- Actions for draft objects -->
+                    <form action="{{ url_for('main.publish_registered_object', id=obj.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" class="btn btn-success">Publicar (20 coins)</button>
+                    </form>
+                    <a href="{{ url_for('main.edit_object', id=obj.id) }}" class="btn btn-primary">Editar</a>
+                    <form action="{{ url_for('main.delete_object', id=obj.id) }}" method="post" style="display:inline;"
+                        onsubmit="return confirm('¿Estás seguro de eliminar este objeto?');">
+                        <button type="submit" class="btn btn-danger">Eliminar Objeto</button>
+                    </form>
+                    {% else %}
+                    <!-- Actions for published objects -->
                     {% if obj.status == 'active' %}
                     <form action="{{ url_for('main.withdraw_object', id=obj.id) }}" method="post"
                         style="display:inline;">
@@ -35,13 +55,57 @@
                         onsubmit="return confirm('¿Estás seguro de eliminar este objeto?');">
                         <button type="submit" class="btn btn-danger">Eliminar Objeto</button>
                     </form>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
             {% else %}
-            <p>No tienes objetos publicados.</p>
+            <p>No tienes objetos registrados ni publicados.</p>
             {% endif %}
         </div>
+    </div>
+
+    <!-- Register Object Tab -->
+    <div class="tab-content" id="register-tab" style="display: none;">
+        <h3>Registrar Objeto</h3>
+        <p>Registra tu objeto sin costo. Podrás publicarlo más tarde por 20 coins.</p>
+
+        <form action="{{ url_for('main.register_object') }}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="photos-register">Fotos (Mínimo 1):</label>
+                <input type="file" name="photos" id="photos-register" required multiple accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="title-register">Título:</label>
+                <input type="text" name="title" id="title-register" required>
+            </div>
+            <div class="form-group">
+                <label for="description-register">Descripción:</label>
+                <textarea name="description" id="description-register" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="category-register">Categoría:</label>
+                <select name="category" id="category-register" required>
+                    <option value="">Seleccione</option>
+                    <option value="Ropa">Ropa</option>
+                    <option value="Electro">Electro</option>
+                    <option value="Decoración">Decoración</option>
+                    <option value="Libros">Libros</option>
+                    <option value="Juguetes">Juguetes</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="condition-register">Estado:</label>
+                <select name="condition" id="condition-register" required>
+                    <option value="">Seleccione</option>
+                    <option value="Nuevo">Nuevo</option>
+                    <option value="Semi-nuevo">Semi-nuevo</option>
+                    <option value="Usado">Usado</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary">Registrar</button>
+        </form>
     </div>
 
     <!-- Publish Object Tab -->

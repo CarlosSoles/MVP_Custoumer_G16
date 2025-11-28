@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="trade-details-container">
+    <div class="trade-header">
+        <div class="trade-status-banner status-{{ trade.status }}">
+            {% if trade.status == 'pending' %}
+            <span class="status-icon">⏳</span> Pendiente de respuesta
+            {% elif trade.status == 'accepted' %}
+            <span class="status-icon">✅</span> Trueque Aceptado
+            {% elif trade.status == 'completed' %}
+            <span class="status-icon">🎉</span> Trueque Finalizado
+            {% elif trade.status == 'cancelled' %}
+            <span class="status-icon">❌</span> Trueque Cancelado
+            {% endif %}
+        </div>
+
+        <div class="trade-partner-info">
+            <p>Intercambio con:</p>
+            <div class="partner-profile">
+                <div class="partner-avatar">
+                    {% if other_user.photo %}
+                    <img src="{{ url_for('static', filename='uploads/' + other_user.photo) }}"
+                        alt="{{ other_user.name }}">
+                    {% else %}
+                    <div class="avatar-placeholder">{{ other_user.name[0].upper() }}</div>
+                    {% endif %}
+                </div>
+                <div class="partner-details">
+                    <h3>{{ other_user.name }}</h3>
+                    <a href="{{ url_for('main.user_profile', user_id=other_user.id) }}" class="view-profile-link">Ver
+                        Perfil Completo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="trade-content-split">
+        <!-- Requested Object (What the proposer wants) -->
+        <div class="trade-column">
+            <h2 class="column-title">Objeto Solicitado</h2>
+            <div class="product-card">
+                {% set photos = trade.product.photos.split(',') %}
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ trade.product.title }}">
+                </div>
+                <div class="product-info">
+                    <h3>{{ trade.product.title }}</h3>
+                    <p class="product-category">{{ trade.product.category }}</p>
+                    <p class="product-condition">Estado: {{ trade.product.condition }}</p>
+                    <a href="{{ url_for('main.product_detail', id=trade.product.id) }}" class="btn-view-product">Ver
+                        Publicación Original</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Offered Objects (What the proposer offers) -->
+        <div class="trade-column">
+            <h2 class="column-title">Objetos Ofrecidos</h2>
+            {% if trade.offered_products.count() > 0 %}
+            <div class="offered-grid">
+                {% for offer in trade.offered_products %}
+                <div class="offered-card">
+                    {% set photos = offer.product.photos.split(',') %}
+                    <div class="offered-image">
+                        <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}"
+                            alt="{{ offer.product.title }}">
+                    </div>
+                    <div class="offered-info">
+                        <h4>{{ offer.product.title }}</h4>
+                        <a href="{{ url_for('main.product_detail', id=offer.product.id) }}" class="link-view-offer">Ver
+                            Objeto</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-offers">
+                <p>No se seleccionaron objetos específicos para ofrecer en este trueque.</p>
+                <p class="hint">El trueque se basará en negociación directa o efectivo.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="trade-actions-footer">
+        <a href="{{ url_for('main.trade_chat', id=trade.id) }}" class="btn-action btn-chat">Ir al Chat</a>
+
+        {% if trade.status == 'pending' %}
+        {% if current_user.id == trade.receiver_id %}
+        <form action="{{ url_for('main.accept_trade', id=trade.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-action btn-accept">Aceptar Trueque</button>
+        </form>
+        <form action="{{ url_for('main.cancel_trade', id=trade.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-action btn-reject">Rechazar</button>
+        </form>
+        {% else %}
+        <form action="{{ url_for('main.cancel_trade', id=trade.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn-action btn-cancel">Cancelar Solicitud</button>
+        </form>
+        {% endif %}
+        {% endif %}
+
+        <a href="{{ url_for('main.my_trades') }}" class="btn-back">Volver a Mis Trueques</a>
+    </div>
+</div>
+{% endblock %}

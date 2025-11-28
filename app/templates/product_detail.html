@@ -71,44 +71,15 @@
                 </div>
             </div>
 
-            <!-- Your Offer Section (Optional) -->
-            {% if my_objects %}
-            <div class="your-offer-section">
-                <h3 class="offer-heading">Tu Ofreces (Opcional)</h3>
-                <p class="offer-description">Selecciona uno o más objetos que estés dispuesto a intercambiar. Esto es
-                    opcional, pero ayuda al propietario a conocer tus intereses.</p>
-
-                <div class="offer-grid">
-                    {% for obj in my_objects %}
-                    <div class="offer-card" onclick="toggleOfferSelection(this, {{ obj.id }})">
-                        <input type="checkbox" name="offered_products" value="{{ obj.id }}" class="offer-checkbox"
-                            id="offer-{{ obj.id }}">
-                        {% set photos = obj.photos.split(',') %}
-                        <img src="{{ url_for('static', filename='uploads/' + photos[0]) }}" alt="{{ obj.title }}">
-                        <div class="offer-card-info">
-                            <h4>{{ obj.title }}</h4>
-                            {% if obj.is_draft %}
-                            <span class="offer-badge draft">Borrador</span>
-                            {% else %}
-                            <span class="offer-badge published">Publicado</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Trade Section -->
+            <!-- Actions -->
             <div class="trade-section">
-                <h3 class="trade-heading">Listo para el Trueque</h3>
-                <p class="trade-description">¿Tienes algo interesante? ¡Haz tu oferta! Este usuario está buscando
-                    principalmente artículos de tecnología vintage o instrumentos musicales.</p>
-
-                <form action="{{ url_for('main.propose_trade', id=product.id) }}" method="post" id="tradeForm">
+                {% if current_user.is_authenticated and current_user != product.owner %}
+                <h3 class="trade-heading">¿Te interesa?</h3>
+                <form action="{{ url_for('main.propose_trade', id=product.id) }}" method="get">
                     <button type="submit" class="btn-propose-trade">Proponer Trueque</button>
                 </form>
-                <a href="{{ url_for('main.index') }}" class="btn-cancel">Cancelar</a>
+                {% endif %}
+                <button onclick="history.back()" class="btn-cancel">Volver</button>
             </div>
         </div>
     </div>
@@ -117,48 +88,15 @@
 <script>
     function changeImage(imageSrc, thumbnail) {
         document.getElementById('mainImage').src = imageSrc;
-
-        // Remove active class from all thumbnails
         document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-
-        // Add active class to clicked thumbnail
         thumbnail.classList.add('active');
     }
 
     function switchTab(tabName) {
-        // Hide all tab panels
-        document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-
-        // Remove active class from all buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-
-        // Show selected tab panel
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(tabName + '-tab').classList.add('active');
-
-        // Add active class to clicked button
         event.target.classList.add('active');
     }
-
-    function toggleOfferSelection(card, productId) {
-        const checkbox = document.getElementById('offer-' + productId);
-        checkbox.checked = !checkbox.checked;
-        card.classList.toggle('selected');
-    }
-
-    // Submit form with selected offers
-    document.getElementById('tradeForm').addEventListener('submit', function (e) {
-        const checkboxes = document.querySelectorAll('.offer-checkbox:checked');
-        checkboxes.forEach(cb => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'offered_products';
-            input.value = cb.value;
-            this.appendChild(input);
-        });
-    });
 </script>
 {% endblock %}
