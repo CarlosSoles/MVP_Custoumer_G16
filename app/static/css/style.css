@@ -632,3 +632,13 @@ nav a {
     color: var(--text-gray);
     padding: 3rem;
 }
+/* Logo Image Styles */
+.logo img {
+    height: 40px;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.logo a:hover img {
+    transform: scale(1.05);
+}
