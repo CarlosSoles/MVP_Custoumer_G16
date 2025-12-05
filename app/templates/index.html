@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if current_user.is_authenticated %}
+<!-- Authenticated User View - Original Product Feed -->
 <div class="hero">
     <h1>Encuentra tu próximo tesoro</h1>
     <p>Explora, intercambia y subasta objetos únicos en nuestra comunidad.</p>
@@ -32,23 +34,207 @@
             <span class="card-tag">DISPONIBLE PARA TRUEQUE</span>
             <h3 class="card-title">{{ product.title }}</h3>
             <p class="card-user">De {{ product.owner.name }}</p>
-            {% if current_user.is_authenticated %}
             <form action="{{ url_for('main.propose_trade', id=product.id) }}" method="get">
                 <button type="submit" class="btn-full">Proponer Trueque</button>
             </form>
-            {% else %}
-            <a href="{{ url_for('main.login') }}" class="btn-full">Únete a CambialoPe para ver más productos</a>
-            {% endif %}
         </div>
     </div>
     {% endfor %}
     {% else %}
     <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
         <p>No hay productos disponibles en esta categoría.</p>
-        {% if current_user.is_authenticated %}
         <a href="{{ url_for('main.publish_object') }}" class="btn-primary">¡Sé el primero en publicar!</a>
-        {% endif %}
     </div>
     {% endif %}
 </div>
+
+{% else %}
+<!-- Landing Page for Non-Authenticated Users -->
+<div class="landing-page">
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Intercambia lo que no usas por lo que necesitas</h1>
+            <p class="hero-subtitle">CambialoPe es la plataforma peruana de trueques donde puedes intercambiar objetos
+                de forma segura, sostenible y sin gastar dinero.</p>
+            <div class="hero-cta">
+                <a href="{{ url_for('main.register') }}" class="btn-hero-primary">Comenzar Ahora</a>
+                <a href="{{ url_for('main.login') }}" class="btn-hero-secondary">Iniciar Sesión</a>
+            </div>
+        </div>
+        <div class="hero-image-placeholder">
+            <div class="placeholder-content">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Imagen Hero</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="landing-about">
+        <div class="about-container">
+            <h2 class="section-title">¿Qué es CambialoPe?</h2>
+            <p class="section-description">
+                Somos una comunidad de intercambio que promueve la economía circular y el consumo responsable.
+                En CambialoPe, puedes dar nueva vida a tus objetos y encontrar tesoros únicos sin gastar un sol.
+            </p>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <section class="landing-video">
+        <div class="video-container">
+            <h2 class="section-title">Descubre cómo funciona</h2>
+            <div class="video-placeholder">
+                <div class="video-placeholder-content">
+                    <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon>
+                    </svg>
+                    <p>Video de YouTube</p>
+                    <small>Inserta tu URL de YouTube aquí</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="landing-features">
+        <div class="features-container">
+            <h2 class="section-title">¿Por qué elegir CambialoPe?</h2>
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Comunidad Confiable</h3>
+                    <p class="feature-description">Intercambia con personas verificadas en un entorno seguro y
+                        transparente.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Rápido y Fácil</h3>
+                    <p class="feature-description">Publica tus objetos en minutos y comienza a recibir propuestas de
+                        intercambio.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Sin Costos</h3>
+                    <p class="feature-description">Intercambia sin gastar dinero. Usa nuestro sistema de monedas
+                        virtuales para facilitar trueques.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                            </path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Variedad de Categorías</h3>
+                    <p class="feature-description">Desde ropa y electrónicos hasta libros y decoración. Encuentra de
+                        todo.</p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Chat Integrado</h3>
+                    <p class="feature-description">Comunícate directamente con otros usuarios para coordinar tus
+                        intercambios.</p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Proceso Transparente</h3>
+                    <p class="feature-description">Seguimiento completo de tus trueques desde la propuesta hasta la
+                        confirmación.</p>
+                </div>
+
+                <!-- Feature 7 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Seguro y Protegido</h3>
+                    <p class="feature-description">Tu información está protegida. Intercambia con confianza en nuestra
+                        plataforma.</p>
+                </div>
+
+                <!-- Feature 8 -->
+                <div class="feature-card">
+                    <div class="feature-image-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Impacto Sostenible</h3>
+                    <p class="feature-description">Contribuye al medio ambiente dando nueva vida a objetos y reduciendo
+                        el desperdicio.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="landing-cta">
+        <div class="cta-container">
+            <h2 class="cta-title">¿Listo para comenzar a intercambiar?</h2>
+            <p class="cta-description">Únete a nuestra comunidad y descubre un nuevo mundo de posibilidades.</p>
+            <a href="{{ url_for('main.register') }}" class="btn-cta-large">Crear Cuenta Gratis</a>
+        </div>
+    </section>
+</div>
+{% endif %}
 {% endblock %}
